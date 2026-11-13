@@ -2791,15 +2791,26 @@
     <!-- ================= CLOUD REALTIME SYNC MODULE ================= -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Din fasta Firebase-koppling för TinaBjor (GitHub Pages)
+        const GITHUB_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCB4Bqer5sGYLG8xZ5BY307omOx5dZr0tU",
+            authDomain: "tinabjor.firebaseapp.com",
+            projectId: "tinabjor",
+            storageBucket: "tinabjor.firebasestorage.app",
+            messagingSenderId: "944754302962",
+            appId: "1:944754302962:web:3febc01218cb6d048d156b",
+            measurementId: "G-K96GSKYZXR"
+        };
 
         let db = null;
         let auth = null;
         let currentUser = null;
         let isApplyingRemoteUpdate = false;
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'overtanger-628-app';
+        const appId = 'overtanger-628-app';
 
         function setSyncBadge(status, label) {
             const dot = document.getElementById('syncStatusDot');
@@ -2847,27 +2858,12 @@
 
         window.initCloudSync = async function () {
             try {
-                const customFbRaw = localStorage.getItem('overtanger_custom_fb_config');
-                let firebaseConfig = null;
-
-                if (customFbRaw) {
-                    firebaseConfig = JSON.parse(customFbRaw);
-                } else if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                    firebaseConfig = JSON.parse(__firebase_config);
-                } else {
-                    setSyncBadge('offline', 'Lokalt läge');
-                    return;
-                }
-
-                const app = initializeApp(firebaseConfig);
+                setSyncBadge('syncing', 'Ansluter...');
+                const app = initializeApp(GITHUB_FIREBASE_CONFIG);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
 
                 onAuthStateChanged(auth, async (user) => {
                     if (!user) return;
@@ -2875,7 +2871,7 @@
 
                     const idDisplay = document.getElementById('drawerUserIdDisplay');
                     if (idDisplay) {
-                        idDisplay.innerText = `Synk-ID: ${user.uid}`;
+                        idDisplay.innerText = `Synk-ID: ${user.uid.slice(0, 8)}...`;
                     }
 
                     const householdRef = doc(db, 'artifacts', appId, 'public', 'data', 'household_state', 'overtanger_628');
@@ -2928,7 +2924,7 @@
                 });
             } catch (e) {
                 console.error('Kunde inte starta molnsynkning:', e);
-                setSyncBadge('offline', 'Lokalt läge');
+                setSyncBadge('offline', 'Kolla Auth i Firebase');
             }
         };
 
@@ -2937,4 +2933,5 @@
         }
     </script>
 </body>
+</html>
 </html>
